@@ -1,4 +1,5 @@
 const LoanRepaymentMonitoring = require('../models/LoanRepaymentMonitoring');
+const LoanApplication = require('../models/LoanApplication');
 
 // Create a new loan repayment monitoring entry
 exports.createLoanRepayment = async (req, res) => {
@@ -35,9 +36,36 @@ exports.getLoanRepaymentById = async (req, res) => {
 // Update a loan repayment by ID
 exports.updateLoanRepayment = async (req, res) => {
     try {
-        const repayment = await LoanRepaymentMonitoring.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!repayment) return res.status(404).json({ message: 'Loan repayment not found' });
-        res.json(repayment);
+        // Find and update the repayment entry
+        const repayment = await LoanRepaymentMonitoring.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+
+        if (!repayment) {
+            return res.status(404).json({ message: 'Loan repayment not found' });
+        }
+
+        // Find the associated loan application
+        const loan = await LoanApplication.findById(repayment.loanId);
+        if (!loan) {
+            return res.status(404).json({ message: 'Associated loan application not found' });
+        }
+
+        // Update the loan's remaining balance
+        loan.remainingBalance -= repayment.amountPaid;
+
+        // Check if the loan is fully repaid
+        if (loan.remainingBalance <= 0) {
+            loan.remainingBalance = 0; // Ensure it doesn't go negative
+            loan.status = 'completed'; // Mark loan as completed
+        }
+
+        // Save the updated loan application
+        await loan.save();
+
+        res.json({ repayment, loan });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
