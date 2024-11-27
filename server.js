@@ -6,6 +6,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const loanApplicationRoutes = require('./routes/loanApplicationRoutes');
 const loanRepaymentMonitoringRoutes = require('./routes/loanRepaymentMonitoringRoutes');
+const escrowRoutes = require('./routes/EscrowRoutes');
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,7 @@ app.use('/transactions', transactionRoutes);
 app.use('/payments', paymentRoutes);
 app.use('/loan-applications', loanApplicationRoutes);
 app.use('/loan-repayments', loanRepaymentMonitoringRoutes);
+app.use('/es', escrowRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
