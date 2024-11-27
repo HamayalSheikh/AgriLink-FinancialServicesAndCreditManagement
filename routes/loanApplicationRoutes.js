@@ -7,5 +7,6 @@ router.get('/', loanApplicationController.getAllLoanApplications);
 router.get('/:id', loanApplicationController.getLoanApplicationById);
 router.put('/:id', loanApplicationController.updateLoanApplication);
 router.delete('/:id', loanApplicationController.deleteLoanApplication);
+router.put('/:id', loanApplicationController.approveOrRejectLoan); 
 
 module.exports = router;

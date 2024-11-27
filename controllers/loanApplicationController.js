@@ -53,3 +53,23 @@ exports.deleteLoanApplication = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// just added this 
+// Approve or reject a loan application
+exports.approveOrRejectLoan = async (req, res) => {
+    try {
+        const { status } = req.body; // Accepts 'approved' or 'rejected'
+        if (!['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ message: 'Invalid status' });
+        }
+        const application = await LoanApplication.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+        if (!application) return res.status(404).json({ message: 'Loan application not found' });
+        res.json(application);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
