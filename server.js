@@ -9,6 +9,8 @@ const loanApplicationRoutes = require('./routes/loanApplicationRoutes');
 const loanRepaymentMonitoringRoutes = require('./routes/loanRepaymentMonitoringRoutes');
 const escrowRoutes = require('./routes/EscrowRoutes');
 const testRoutes = require('./routes/testRoutes');
+const creditScoreRoutes = require('./routes/creditScoreRoutes');
+
 
 const app = express();
 app.use(express.json());
@@ -23,6 +25,7 @@ app.use('/payments', paymentRoutes);
 app.use('/loan-applications', loanApplicationRoutes);
 app.use('/loan-repayments', loanRepaymentMonitoringRoutes);
 app.use('/es', escrowRoutes);
+app.use('/creditscore', creditScoreRoutes);
 app.use('/test', testRoutes);
 
 const PORT = process.env.PORT || 5000;

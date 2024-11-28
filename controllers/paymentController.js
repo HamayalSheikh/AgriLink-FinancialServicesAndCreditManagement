@@ -1,4 +1,6 @@
 const Payment = require('../models/Payment');
+const LoanRepaymentMonitoring = require('../models/LoanRepaymentMonitoring');
+const { updateCreditScoreOnRepayment } = require('./CreditScoreController');
 
 // Create a new payment
 exports.createPayment = async (req, res) => {
@@ -54,5 +56,21 @@ exports.deletePayment = async (req, res) => {
     }
 };
 
-
+// Process a repayment
+exports.processRepayment = async (req, res) => {
+    try {
+      const { repaymentId, status, amount } = req.body;
   
+      const repayment = await LoanRepaymentMonitoring.findById(repaymentId);
+      if (!repayment) return res.status(404).json({ message: 'Repayment not found.' });
+  
+      repayment.status = status;
+      await repayment.save();
+  
+      await updateCreditScoreOnRepayment(repayment.userId, status, amount);
+  
+      res.json({ message: 'Repayment processed and credit score updated.' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+};

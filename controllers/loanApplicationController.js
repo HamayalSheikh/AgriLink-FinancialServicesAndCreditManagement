@@ -1,4 +1,5 @@
 const LoanApplication = require('../models/LoanApplication');
+const CreditScore = require('../models/CreditScore');
 
 // Create a new loan application
 exports.createLoanApplication = async (req, res) => {
@@ -54,20 +55,33 @@ exports.deleteLoanApplication = async (req, res) => {
     }
 };
 
-// just added this 
+
 // Approve or reject a loan application
 exports.approveOrRejectLoan = async (req, res) => {
     try {
         const { status } = req.body; // Accepts 'approved' or 'rejected'
+        const loanId = req.params.id;
+
         if (!['approved', 'rejected'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status' });
         }
-        const application = await LoanApplication.findByIdAndUpdate(
-            req.params.id,
-            { status },
-            { new: true }
-        );
+
+        // Get the loan application details
+        const application = await LoanApplication.findById(loanId);
         if (!application) return res.status(404).json({ message: 'Loan application not found' });
+
+        // Check credit score before approval
+        if (status === 'approved') {
+            const creditScore = await CreditScore.findOne({ userId: application.userId });
+            if (!creditScore || creditScore.score < 600) {
+                return res.status(400).json({ message: 'Loan application denied due to low credit score.' });
+            }
+        }
+
+        // Update loan application status
+        application.status = status;
+        await application.save();
+
         res.json(application);
     } catch (error) {
         res.status(400).json({ error: error.message });
