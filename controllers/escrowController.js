@@ -85,3 +85,27 @@ exports.releaseEscrowFunds = async (req, res) => {
       res.status(500).json({ error: 'Error releasing funds' });
     }
   };
+
+  // Route to fetch escrow details
+exports.getEscrowDetails = async (req, res) => {
+  try {
+    const { transactionId } = req.params;  // Get transaction ID from params
+    const payment = await Payment.findOne({ transactionId });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    // Return escrow details
+    const escrowDetails = {
+      transactionId: payment.transactionId,
+      amount: payment.amount,
+      escrowStatus: payment.escrowStatus,
+      escrowReleaseConditions: payment.escrowReleaseConditions
+    };
+
+    res.status(200).json(escrowDetails);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching escrow details' });
+  }
+};

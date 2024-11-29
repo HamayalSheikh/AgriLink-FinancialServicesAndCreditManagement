@@ -6,5 +6,6 @@ const EscrowController = require('../controllers/escrowController');
 router.post('/escrow/create', EscrowController.createEscrow);
 router.put('/escrow/verify', EscrowController.verifyEscrowConditions);
 router.put('/escrow/:transactionId/release', EscrowController.releaseEscrowFunds);
+router.get('/escrow/:transactionId', EscrowController.getEscrowDetails);
 
 module.exports = router;
