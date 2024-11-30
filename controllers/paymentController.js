@@ -1,6 +1,7 @@
 const Payment = require('../models/Payment');
 const LoanRepaymentMonitoring = require('../models/LoanRepaymentMonitoring');
 const { updateCreditScoreOnRepayment } = require('./CreditScoreController');
+const stripe = require('../utils/stripe');
 
 // Create a new payment
 exports.createPayment = async (req, res) => {
@@ -72,5 +73,51 @@ exports.processRepayment = async (req, res) => {
       res.json({ message: 'Repayment processed and credit score updated.' });
     } catch (error) {
       res.status(500).json({ message: error.message });
+    }
+};
+
+// Function to handle the payment
+exports.makePayment = async (req, res) => {
+    try {
+        const { amount, paymentMethodId } = req.body;
+        // input validation 
+        if (!amount || !paymentMethodId) {
+            return res.status(400).json({ error: 'Amount and paymentMethodId are required' });
+        }
+        // create a new payment
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount,
+            currency: 'pkr',
+            payment_method: paymentMethodId,
+            confirmation_method: 'automatic',  
+            confirm: true,
+        });
+
+        const paymentStatus = paymentIntent.status === 'succeeded' ? 'completed' :
+                              paymentIntent.status === 'pending' ? 'pending' : 'failed';
+                              
+        // record the payment to database 
+        const payment = new Payment({
+            transactionId: paymentIntent.id,
+            amount: paymentIntent.amount_received / 100,
+            paymentMethod: paymentIntent.payment_method,
+            paymentStatus: paymentStatus, 
+            paymentDate: new Date(),
+        });
+        // save payment
+        await payment.save();
+        // respond with payment information
+        return res.status(200).json({
+            status: 'success',
+            payment,
+            message: 'Payment successful',
+        });
+    } catch(error) {
+        console.error('Error during payment:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Payment failed',
+            error: error.message,
+        });
     }
 };
