@@ -1,12 +1,15 @@
 const express = require('express');
-const loanApplicationController = require('../controllers/loanApplicationController');
+const loanServiceController = require('../controllers/loanServiceController');
 const router = express.Router();
 
-router.post('/', loanApplicationController.createLoanApplication);
-router.get('/', loanApplicationController.getAllLoanApplications);
-router.get('/:id', loanApplicationController.getLoanApplicationById);
-router.put('/:id', loanApplicationController.updateLoanApplication);
-router.delete('/:id', loanApplicationController.deleteLoanApplication);
-router.put('/:id', loanApplicationController.approveOrRejectLoan); 
+// CRUD routes for loan applications
+router.post('/', loanServiceController.createLoanApplication);
+router.get('/', loanServiceController.getAllLoanApplications);
+router.get('/:id', loanServiceController.getLoanApplicationById);
+router.put('/:id', loanServiceController.updateLoanApplication);
+router.delete('/:id', loanServiceController.deleteLoanApplication);
+
+// Approve or reject a loan application
+router.put('/:id/status', loanServiceController.approveOrRejectLoan);
 
 module.exports = router;

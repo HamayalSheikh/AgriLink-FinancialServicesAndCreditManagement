@@ -1,120 +1,128 @@
-const Payment = require('../models/Payment');
+const axios = require('axios');
+const stripe = require('../utils/stripe');
 const LoanRepaymentMonitoring = require('../models/LoanRepaymentMonitoring');
 const { updateCreditScoreOnRepayment } = require('./CreditScoreController');
-const stripe = require('../utils/stripe');
+require('dotenv').config();
+
+const BASE_URL = process.env.DB_SERVICE_URL;
 
 // Create a new payment
 exports.createPayment = async (req, res) => {
     try {
-        const payment = new Payment(req.body);
-        await payment.save();
-        res.status(201).json(payment);
+        const response = await axios.post(`${BASE_URL}/payments`, req.body);
+        res.status(201).json(response.data);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
     }
 };
 
 // Retrieve all payments
 exports.getAllPayments = async (req, res) => {
     try {
-        const payments = await Payment.find();
-        res.json(payments);
+        const response = await axios.get(`${BASE_URL}/payments`, { params: req.query });
+        res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
     }
 };
 
 // Retrieve a payment by ID
 exports.getPaymentById = async (req, res) => {
     try {
-        const payment = await Payment.findById(req.params.id);
-        if (!payment) return res.status(404).json({ message: 'Payment not found' });
-        res.json(payment);
+        const response = await axios.get(`${BASE_URL}/payments/${req.params.id}`);
+        res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
     }
 };
 
 // Update a payment by ID
 exports.updatePayment = async (req, res) => {
     try {
-        const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!payment) return res.status(404).json({ message: 'Payment not found' });
-        res.json(payment);
+        const response = await axios.put(`${BASE_URL}/payments/${req.params.id}`, req.body);
+        res.json(response.data);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
     }
 };
 
 // Delete a payment by ID
 exports.deletePayment = async (req, res) => {
     try {
-        const payment = await Payment.findByIdAndDelete(req.params.id);
-        if (!payment) return res.status(404).json({ message: 'Payment not found' });
-        res.json({ message: 'Payment deleted' });
+        const response = await axios.delete(`${BASE_URL}/payments/${req.params.id}`);
+        res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
     }
 };
 
 // Process a repayment
 exports.processRepayment = async (req, res) => {
     try {
-      const { repaymentId, status, amount } = req.body;
-  
-      const repayment = await LoanRepaymentMonitoring.findById(repaymentId);
-      if (!repayment) return res.status(404).json({ message: 'Repayment not found.' });
-  
-      repayment.status = status;
-      await repayment.save();
-  
-      await updateCreditScoreOnRepayment(repayment.userId, status, amount);
-  
-      res.json({ message: 'Repayment processed and credit score updated.' });
+        const { repaymentId, status, amount } = req.body;
+
+        // Find repayment in the central microservice
+        const repaymentResponse = await axios.get(`${BASE_URL}/loanrepayments/${repaymentId}`);
+        const repayment = repaymentResponse.data?.data;
+
+        if (!repayment) {
+            return res.status(404).json({ message: 'Repayment not found.' });
+        }
+
+        // Update repayment status in the central microservice
+        repayment.status = status;
+        await axios.put(`${BASE_URL}/loanrepayments/${repaymentId}`, repayment);
+
+        // Update credit score based on repayment status
+        await updateCreditScoreOnRepayment(repayment.userId, status, amount);
+
+        res.json({ message: 'Repayment processed and credit score updated.' });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.response?.data || error.message });
     }
 };
 
-// Function to handle the payment
+// Make a payment with Stripe
 exports.makePayment = async (req, res) => {
     try {
         const { amount, paymentMethodId } = req.body;
-        // input validation 
+
+        // Validate required inputs
         if (!amount || !paymentMethodId) {
             return res.status(400).json({ error: 'Amount and paymentMethodId are required' });
         }
-        // create a new payment
+
+        // Create a Stripe payment intent
         const paymentIntent = await stripe.paymentIntents.create({
-            amount,
+            amount: amount * 100,
             currency: 'pkr',
             payment_method: paymentMethodId,
-            confirmation_method: 'automatic',  
+            confirmation_method: 'automatic',
             confirm: true,
         });
 
-        const paymentStatus = paymentIntent.status === 'succeeded' ? 'completed' :
-                              paymentIntent.status === 'pending' ? 'pending' : 'failed';
-                              
-        // record the payment to database 
-        const payment = new Payment({
+        // Determine payment status
+        const paymentStatus =
+            paymentIntent.status === 'succeeded' ? 'completed' :
+            paymentIntent.status === 'pending' ? 'pending' : 'failed';
+
+        // Record payment in the central microservice
+        const paymentResponse = await axios.post(`${BASE_URL}/payments`, {
             transactionId: paymentIntent.id,
             amount: paymentIntent.amount_received / 100,
             paymentMethod: paymentIntent.payment_method,
-            paymentStatus: paymentStatus, 
+            paymentStatus,
             paymentDate: new Date(),
         });
-        // save payment
-        await payment.save();
-        // respond with payment information
-        return res.status(200).json({
+
+        res.status(200).json({
             status: 'success',
-            payment,
+            data: paymentResponse.data,
             message: 'Payment successful',
         });
-    } catch(error) {
+    } catch (error) {
         console.error('Error during payment:', error);
-        return res.status(500).json({
+        res.status(500).json({
             status: 'error',
             message: 'Payment failed',
             error: error.message,

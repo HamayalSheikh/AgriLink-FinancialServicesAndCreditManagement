@@ -10,19 +10,19 @@ const paymentSchema = new mongoose.Schema({
     paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], required: true },
     escrow: { 
         type: Boolean, 
-        default: true // Indicates the payment is held in escrow
-      },
-      escrowStatus: {
+        default: true 
+    },
+    escrowStatus: {
         type: String,
         enum: ['Pending', 'Released', 'Cancelled'], 
-        default: 'Pending' // Tracks escrow state
-      },
-      createdAt: { type: Date, default: Date.now },
-      updatedAt: { type: Date, default: Date.now },  // Track changes
-      escrowReleaseConditions: { // Conditions required to release the funds
+        default: 'Pending' 
+    },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+    escrowReleaseConditions: {
         allPartiesConfirmed: { type: Boolean, default: false },
         transactionVerified: { type: Boolean, default: false }
-      }
+    }
 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

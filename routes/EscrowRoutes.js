@@ -1,11 +1,10 @@
 const express = require('express');
+const escrowServiceController = require('../controllers/escrowServiceController');
 const router = express.Router();
-const EscrowController = require('../controllers/escrowController');
 
-// Routes for escrow functionality
-router.post('/escrow/create', EscrowController.createEscrow);
-router.put('/escrow/verify', EscrowController.verifyEscrowConditions);
-router.put('/escrow/:transactionId/release', EscrowController.releaseEscrowFunds);
-router.get('/escrow/:transactionId', EscrowController.getEscrowDetails);
+router.post('/escrow/create', escrowServiceController.createEscrow);
+router.put('/escrow/verify', escrowServiceController.verifyEscrowConditions);
+router.put('/escrow/:transactionId/release', escrowServiceController.releaseEscrowFunds);
+router.get('/escrow/:transactionId', escrowServiceController.getEscrowDetails);
 
 module.exports = router;
