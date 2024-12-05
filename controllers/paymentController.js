@@ -62,7 +62,7 @@ exports.processRepayment = async (req, res) => {
         const { repaymentId, status, amount } = req.body;
 
         // Find repayment in the central microservice
-        const repaymentResponse = await axios.get(`${BASE_URL}/loanrepayments/${repaymentId}`);
+        const repaymentResponse = await axios.get(`${BASE_URL}/loan-repayments/${repaymentId}`);
         const repayment = repaymentResponse.data?.data;
 
         if (!repayment) {
@@ -71,7 +71,7 @@ exports.processRepayment = async (req, res) => {
 
         // Update repayment status in the central microservice
         repayment.status = status;
-        await axios.put(`${BASE_URL}/loanrepayments/${repaymentId}`, repayment);
+        await axios.put(`${BASE_URL}/loan-repayments/${repaymentId}`, repayment);
 
         // Update credit score based on repayment status
         await updateCreditScoreOnRepayment(repayment.userId, status, amount);

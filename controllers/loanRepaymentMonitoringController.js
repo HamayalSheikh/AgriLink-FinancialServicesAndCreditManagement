@@ -10,7 +10,7 @@ exports.createLoanRepayment = async (req, res) => {
 
     try {
         // Fetch loan details from the central microservice
-        const loanResponse = await axios.get(`${BASE_URL}/loanapplications/${loanId}`);
+        const loanResponse = await axios.get(`${BASE_URL}/loan-applications/${loanId}`);
         const loan = loanResponse.data?.data;
 
         if (!loan) {
@@ -46,7 +46,7 @@ exports.createLoanRepayment = async (req, res) => {
         await axios.put(`${BASE_URL}/loanapplications/${loanId}`, loan);
 
         // Save repayment details in the central microservice
-        const repaymentResponse = await axios.post(`${BASE_URL}/loanrepayments`, {
+        const repaymentResponse = await axios.post(`${BASE_URL}/loan-repayments`, {
             monitoringId: paymentIntent.id,
             loanId,
             repaymentDate: repaymentDate || new Date(),
@@ -74,7 +74,7 @@ exports.createLoanRepayment = async (req, res) => {
 // Retrieve all loan repayments
 exports.getAllLoanRepayments = async (req, res) => {
     try {
-        const response = await axios.get(`${BASE_URL}/loanrepayments`, { params: req.query });
+        const response = await axios.get(`${BASE_URL}/loan-repayments`, { params: req.query });
         res.json(response.data);
     } catch (error) {
         res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
@@ -84,7 +84,7 @@ exports.getAllLoanRepayments = async (req, res) => {
 // Retrieve a loan repayment by ID
 exports.getLoanRepaymentById = async (req, res) => {
     try {
-        const response = await axios.get(`${BASE_URL}/loanrepayments/${req.params.id}`);
+        const response = await axios.get(`${BASE_URL}/loan-repayments/${req.params.id}`);
         res.json(response.data);
     } catch (error) {
         res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
@@ -98,7 +98,7 @@ exports.updateLoanRepayment = async (req, res) => {
         const updatedData = req.body;
 
         // Fetch the existing repayment details
-        const repaymentResponse = await axios.get(`${BASE_URL}/loanrepayments/${repaymentId}`);
+        const repaymentResponse = await axios.get(`${BASE_URL}/loan-repayments/${repaymentId}`);
         const existingRepayment = repaymentResponse.data?.data;
 
         if (!existingRepayment) {
@@ -106,7 +106,7 @@ exports.updateLoanRepayment = async (req, res) => {
         }
 
         // Fetch the associated loan details
-        const loanResponse = await axios.get(`${BASE_URL}/loanapplications/${existingRepayment.loanId}`);
+        const loanResponse = await axios.get(`${BASE_URL}/loan-applications/${existingRepayment.loanId}`);
         const loan = loanResponse.data?.data;
 
         if (!loan) {
@@ -114,7 +114,7 @@ exports.updateLoanRepayment = async (req, res) => {
         }
 
         // Update repayment data in the central microservice
-        const repaymentUpdateResponse = await axios.put(`${BASE_URL}/loanrepayments/${repaymentId}`, updatedData);
+        const repaymentUpdateResponse = await axios.put(`${BASE_URL}/loan-repayments/${repaymentId}`, updatedData);
         const updatedRepayment = repaymentUpdateResponse.data?.data;
 
         // Adjust the loan's remaining balance
@@ -128,7 +128,7 @@ exports.updateLoanRepayment = async (req, res) => {
         }
 
         // Save updated loan details in the central microservice
-        await axios.put(`${BASE_URL}/loanapplications/${loan._id}`, loan);
+        await axios.put(`${BASE_URL}/loan-applications/${loan._id}`, loan);
 
         res.json({
             success: true,
@@ -149,7 +149,7 @@ exports.updateLoanRepayment = async (req, res) => {
 // Delete a loan repayment by ID
 exports.deleteLoanRepayment = async (req, res) => {
     try {
-        const repaymentResponse = await axios.delete(`${BASE_URL}/loanrepayments/${req.params.id}`);
+        const repaymentResponse = await axios.delete(`${BASE_URL}/loan-repayments/${req.params.id}`);
         res.json(repaymentResponse.data);
     } catch (error) {
         res.status(error.response?.status || 500).json({ error: error.response?.data || error.message });
