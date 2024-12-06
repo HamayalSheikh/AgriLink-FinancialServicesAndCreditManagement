@@ -24,7 +24,7 @@ exports.createTransaction = async (req, res) => {
 
         // Create the corresponding payment in the central microservice
         const paymentResponse = await axios.post(`${BASE_URL}/payments`, {
-            transactionId: transaction.transactionId,
+            transactionId: transaction._id,
             amount: totalPrice,
             paymentStatus: 'pending',
             paymentDate: transactionDate || new Date(),
