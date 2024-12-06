@@ -9,11 +9,11 @@ const BASE_URL = process.env.DB_SERVICE_URL;
 // Create a new payment
 exports.createPayment = async (req, res) => {
     try {
-        const { transaction, totalPrice, transactionDate, paymentMethod } = req.body;
+        const { transactionId, totalPrice, transactionDate, paymentMethod } = req.body;
 
         // Create the corresponding payment in the central microservice
         const paymentResponse = await axios.post(`${BASE_URL}/payments`, {
-            transaction: transaction._id,
+            transaction: transactionId,
             amount: totalPrice,
             paymentStatus: 'pending',
             paymentDate: transactionDate || new Date(),
