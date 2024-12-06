@@ -15,9 +15,10 @@ exports.createTransaction = async (req, res) => {
             product: productId,
             quantity: quantity,
             totalPrice: totalPrice,
-            transactionDate,
             status: status,
         });
+
+        console.log(transactionResponse.data);
 
         const transaction = transactionResponse.data?.data;
 
