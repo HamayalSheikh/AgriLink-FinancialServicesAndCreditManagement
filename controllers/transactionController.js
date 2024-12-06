@@ -20,7 +20,7 @@ exports.createTransaction = async (req, res) => {
 
         console.log(transactionResponse.data);
 
-        const transaction = transactionResponse.data?.data;
+        const transaction = transactionResponse.data;
 
         // Create the corresponding payment in the central microservice
         const paymentResponse = await axios.post(`${BASE_URL}/payments`, {
