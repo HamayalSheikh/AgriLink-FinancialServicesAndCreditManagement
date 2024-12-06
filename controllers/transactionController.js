@@ -31,7 +31,9 @@ exports.createTransaction = async (req, res) => {
             paymentMethod: 'credit card', // Example method
         });
 
-        const payment = paymentResponse.data?.data;
+        console.log("Payment: ", paymentResponse.data);
+
+        const payment = paymentResponse.data;
 
         res.status(201).json({ transaction, payment });
     } catch (error) {
