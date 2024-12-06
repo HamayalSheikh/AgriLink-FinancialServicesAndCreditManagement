@@ -1,6 +1,7 @@
 require('dotenv').config();
 require('./schedulers'); // Automatically starts the scheduled tasks
 const express = require('express');
+const cors = require('cors'); // Add this line
 const connectDB = require('./config/db');
 const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
@@ -10,8 +11,8 @@ const escrowRoutes = require('./routes/EscrowRoutes');
 const testRoutes = require('./routes/testRoutes');
 const creditScoreRoutes = require('./routes/creditScoreRoutes');
 
-
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
