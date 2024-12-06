@@ -10,13 +10,13 @@ exports.createTransaction = async (req, res) => {
 
         // Create the transaction in the central microservice
         const transactionResponse = await axios.post(`${BASE_URL}/transactions`, {
-            buyerId,
-            sellerId,
-            productId,
-            quantity,
-            totalPrice,
+            buyer: buyerId,
+            seller: sellerId,
+            product: productId,
+            quantity: quantity,
+            totalPrice: totalPrice,
             transactionDate,
-            status,
+            status: status,
         });
 
         const transaction = transactionResponse.data?.data;
