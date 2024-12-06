@@ -19,16 +19,35 @@ exports.createTransaction = async (req, res) => {
         });
 
         console.log(transactionResponse.data);
-
+        
         const transaction = transactionResponse.data;
+
+        console.log("Transaction: ", transaction);
+
+        console.log(
+            "Transaction ID: ", transaction._id,
+            "Amount: ", totalPrice,
+            "Payment Status: ", 'pending',
+            "Payment Date: ", transactionDate || new Date(),
+            "Payment Method: ", 'credit card',
+            "Escrow: ", false,
+            "Escrow Status: ", 'pending',
+            "Escrow Release Conditions: ", ''
+        );
 
         // Create the corresponding payment in the central microservice
         const paymentResponse = await axios.post(`${BASE_URL}/payments`, {
-            transactionId: transaction._id,
+            transaction: transaction._id,
             amount: totalPrice,
             paymentStatus: 'pending',
             paymentDate: transactionDate || new Date(),
-            paymentMethod: 'credit card', // Example method
+            paymentMethod: 'credit card',
+            "escrow": false,
+            "escrowStatus": "Pending",
+            "escrowReleaseConditions": {
+                "allPartiesConfirmed": false,
+                "transactionVerified": false
+            }
         });
 
         console.log("Payment: ", paymentResponse.data);
